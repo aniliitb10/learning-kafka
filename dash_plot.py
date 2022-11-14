@@ -1,18 +1,14 @@
-from collections import defaultdict
 from typing import Dict
-from pymemcache.client import base
-from pymemcache import serde
-from datetime import datetime
 
 # dash imports
-from dash.dependencies import Input, Output
 from dash import Dash, html, dcc
-import pickle
+from dash.dependencies import Input, Output
 
-# kafka-consumer
-from kafka import KafkaConsumer
-from market_data import MarketData
+# memcache
+from pymemcache import serde
+from pymemcache.client import base
 
+import config  # to fetch the manually configured values
 
 # dash components
 app = Dash(__name__, update_title=None)
@@ -21,33 +17,32 @@ app.layout = html.Div([
     dcc.Graph(id='graph', figure=dict(data=[{'x': [], 'y': []}])),
     dcc.Interval(id="interval-component", interval=1000, n_intervals=0)
 ])
-data: Dict[str, int] = defaultdict(int)
 
-consumer = KafkaConsumer('my_new_topic', key_deserializer=lambda key: key.decode('utf-8'),
-                         value_deserializer=pickle.loads)
+# memcache client to fetch latest values
 client = base.Client(('localhost', 11211), serde=serde.pickle_serde)
 
 
+# Setting up the callback for refreshing the plot every second
 @app.callback(
     Output('graph', 'figure'),
     [Input('interval-component', 'n_intervals')]
 )
 def handle_stream(_):
-    print(f'handle_stream called at {datetime.now()}')
-    # msg: MarketData = consumer.next_v2().value  # blocks until next message is received
-    value: int = int(client.get('SBI'))
-    print(f'Received value: {value}')
-    print(f'Stats: {client.stats()}')
+    received_data: Dict[str, str] = client.get_many(config.TICKERS)
+    parsed_data: Dict[str, int] = {str(ticker): int(quantity) if quantity is not None else 0
+                                   for ticker, quantity in received_data.items()}
+
+    print(f'Parsed data: {parsed_data}')
 
     return {
         "data": [
             {
-                "x": ["SBI"],
-                "y": [value] if value else 0,
+                "x": list(parsed_data.keys()),
+                "y": list(parsed_data.values()),
                 "type": "bar"
             },
         ],
-        "layout": {"title": "Quantity traded for symbols"}
+        "layout": {"title": "Tickers and quantities traded for symbols"}
     }
 
 
