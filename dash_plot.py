@@ -3,7 +3,6 @@ from typing import Dict
 # dash imports
 from dash import Dash, html, dcc
 from dash.dependencies import Input, Output
-
 # memcache
 from pymemcache import serde
 from pymemcache.client import base

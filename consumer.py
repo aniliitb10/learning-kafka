@@ -1,19 +1,20 @@
 import pickle
+from typing import Optional
 
 from kafka import KafkaConsumer
 from kafka.consumer.fetcher import ConsumerRecord
-
-from pymemcache.client import base
-from market_data import MarketData
 from pymemcache import serde
-from typing import Optional
+from pymemcache.client import base
 
+import config
+from market_data import MarketData
 
 if __name__ == '__main__':
     consumer = KafkaConsumer('my_new_topic', value_deserializer=pickle.loads)
 
     # Setting up memcache client
     client = base.Client(('localhost', 11211), serde=serde.pickle_serde)
+    client.delete_many(config.TICKERS)  # cleaning it up
 
     # Now, consuming the messages and publishing on memcache
     msg: ConsumerRecord  # this line is only used for type hint
