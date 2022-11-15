@@ -21,7 +21,7 @@ class MDGenerator:
 
         # following attributes just help the quantity and price rise over time to make updates look live
         self.quantity_up = 2
-        self.price_up = 0.0005  # 0.05 percent
+        self.price_up = 0.001  # 0.1 %
         self.counter = 1
 
     def generate_md(self) -> MarketData:
@@ -34,7 +34,7 @@ class MDGenerator:
         quantity = randrange(*self.quantity_min_max_range)  # select a random int
 
         # values almost finalized, let's smoothly increase the price and quantity
-        price += self.price_up * self.counter
+        price += price * self.price_up * self.counter
         quantity += self.quantity_up * self.counter
         self.counter += 1
 

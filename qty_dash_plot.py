@@ -45,7 +45,7 @@ def handle_stream(_):
             size=18,
             color="RebeccaPurple"
         ),
-        autosize=False,
+        # autosize=False,
         height=700
     )
 
@@ -53,4 +53,4 @@ def handle_stream(_):
 
 
 if __name__ == '__main__':
-    app.run_server(dev_tools_ui=True, dev_tools_hot_reload=True, threaded=True)
+    app.run_server(port="8050", dev_tools_ui=True, dev_tools_hot_reload=True, threaded=True)
