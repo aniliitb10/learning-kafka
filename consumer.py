@@ -3,7 +3,6 @@ from typing import Optional
 
 from kafka import KafkaConsumer
 from kafka.consumer.fetcher import ConsumerRecord
-from pymemcache import serde
 from pymemcache.client import base
 
 import config
@@ -13,7 +12,7 @@ if __name__ == '__main__':
     consumer = KafkaConsumer('my_new_topic', value_deserializer=pickle.loads)
 
     # Setting up memcache client
-    client = base.Client(('localhost', 11211), serde=serde.pickle_serde)
+    client = base.Client(('localhost', 11211))
     client.delete_many(config.TICKERS)  # cleaning it up
 
     # Now, consuming the messages and publishing on memcache

@@ -1,21 +1,28 @@
-from market_data import MarketData
-from typing import List, Dict
-from random import uniform, randrange
+import pickle
 from datetime import datetime
+from random import uniform, randrange
+from time import sleep
+from typing import List, Dict
 
 from kafka.producer import KafkaProducer
-import pickle
-from time import sleep
+
 import config
+from market_data import MarketData
 
 
 class MDGenerator:
     """ A class to randomly generate MarketData for tickers"""
+
     def __init__(self, tickers: List[str], prices: Dict[str, float]):
         self.tickers: List[str] = tickers
         self.prices: Dict[str, float] = prices
-        self.price_dev_threshold = 0.005  # within 0.5%
+        self.price_dev_threshold = 0.0005  # within 0.05%
         self.quantity_min_max_range = (10, 25)
+
+        # following attributes just help the quantity and price rise over time to make updates look live
+        self.quantity_up = 2
+        self.price_up = 0.0005  # 0.05 percent
+        self.counter = 1
 
     def generate_md(self) -> MarketData:
         """ To randomly generate MD for a randomly chosen ticker"""
@@ -23,8 +30,14 @@ class MDGenerator:
         ticker = self.tickers[ticker_index]
         configured_price = self.prices[ticker]
         price_delta = configured_price * self.price_dev_threshold
-        price = uniform(configured_price-price_delta, configured_price+price_delta)  # select a random float
+        price = uniform(configured_price - price_delta, configured_price + price_delta)  # select a random float
         quantity = randrange(*self.quantity_min_max_range)  # select a random int
+
+        # values almost finalized, let's smoothly increase the price and quantity
+        price += self.price_up * self.counter
+        quantity += self.quantity_up * self.counter
+        self.counter += 1
+
         return MarketData(ticker=ticker, ltp=price, quantity=quantity, timestamp=datetime.now())
 
 
