@@ -1,11 +1,9 @@
 from typing import Dict, List
 
 import plotly.graph_objects as go
-
 # dash imports
 from dash import Dash, html, dcc
 from dash.dependencies import Input, Output
-
 # memcache
 from pymemcache.client import base
 

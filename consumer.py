@@ -1,14 +1,12 @@
 import pickle
+from datetime import datetime
 from typing import Optional, List, Tuple
 
 from kafka import KafkaConsumer
 from kafka.consumer.fetcher import ConsumerRecord
 from pymemcache.client import base
 
-import config
 from market_data import MarketData
-from datetime import datetime, time
-
 
 if __name__ == '__main__':
     consumer = KafkaConsumer('my_new_topic', value_deserializer=pickle.loads)
@@ -17,12 +15,12 @@ if __name__ == '__main__':
     client = base.Client(('localhost', 11211))
     client.flush_all()
     begin_time = datetime.now()
-    # client.delete_many(config.TICKERS)  # cleaning it up
 
     # Now, consuming the messages and publishing on memcache
     msg: ConsumerRecord  # this line is only used for type hint
     for msg in consumer:
         print(f'Message received by consumer: {msg.value}')
+
         # publishing quantity
         msg_data: MarketData = msg.value
         prev_quantity: Optional[str] = client.get(msg_data.ticker)  # either None or Byte string

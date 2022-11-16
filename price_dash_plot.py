@@ -45,8 +45,8 @@ def handle_stream(_):
 
     fig.update_layout(
         title={'text': '<b>LTP of Tickers</b>', 'x': 0.5},
-        xaxis_title="Tickers",
-        yaxis_title="LTP",
+        xaxis_title="Time (in seconds)",
+        yaxis_title="LTP of Tickers",
         font=dict(
             family="Courier New, monospace",
             size=18,
