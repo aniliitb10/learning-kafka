@@ -54,4 +54,4 @@ def handle_stream(_):
 
 
 if __name__ == '__main__':
-    app.run_server(port="8052", dev_tools_ui=True, dev_tools_hot_reload=True, threaded=True)
+    app.run_server(port="8053", dev_tools_ui=True, dev_tools_hot_reload=True, threaded=True)

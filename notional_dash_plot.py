@@ -24,16 +24,18 @@ redis_client = Redis(host='localhost', port=config.DEFAULT_REDIS_PORT, db=0)
     [Input('interval-component', 'n_intervals')]
 )
 def handle_stream(_):
-    received_data: Dict[str, bytes] = {ticker: redis_client.get(ticker) for ticker in config.TICKERS}
-    parsed_data: Dict[str, int] = {str(ticker): int(quantity) for ticker, quantity in received_data.items() if quantity}
+    notional_keys = [f'{ticker}{config.NOTIONAL_KEY}' for ticker in config.TICKERS]
+    received_data: Dict[str, bytes] = {ticker: redis_client.get(ticker) for ticker in notional_keys}
+    parsed_data: Dict[str, float] = \
+        {str(ticker): float(notional) for ticker, notional in received_data.items() if notional}
 
-    x: List[str] = list(parsed_data.keys())
-    y: List[int] = list(parsed_data.values())
-    fig = go.Figure(data=[go.Bar(x=x, y=y, text=y, textposition='auto')])
+    x: List[str] = [ticker.split('.')[0] for ticker in parsed_data.keys()]
+    y: List[float] = list(parsed_data.values())
+    fig = go.Figure(data=[go.Bar(x=x, y=y, text=[int(v) for v in y], textposition='auto')])
     fig.update_layout(
-        title={'text': '<b>Tickers vs Total Quantities Traded</b>', 'x': 0.5},
+        title={'text': '<b>Tickers vs Total Notional Traded</b>', 'x': 0.5},
         xaxis_title="Tickers",
-        yaxis_title="Quantities Traded",
+        yaxis_title="Notional Traded",
         font=dict(
             family="Courier New, monospace",
             size=18,
@@ -47,4 +49,4 @@ def handle_stream(_):
 
 
 if __name__ == '__main__':
-    app.run_server(port="8050", dev_tools_ui=True, dev_tools_hot_reload=True, threaded=True)
+    app.run_server(port="8052", dev_tools_ui=True, dev_tools_hot_reload=True, threaded=True)

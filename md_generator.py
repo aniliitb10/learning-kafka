@@ -10,6 +10,16 @@ from kafka.producer import KafkaProducer
 import config
 from market_data import MarketData
 
+"""
+A script to generate Market Data and publish on Kafka instance.
+Any of the following commands can be used to generate data for a particular symbol from config
+python -m md_generator -t SBIN
+python -m md_generator -t PAYTM
+python -m md_generator -t HDFCLIFE
+python -m md_generator -t TATASTEEL ZOMATO
+python -m md_generator -t RELIANCE ADANIENT HDFCBANK TCS ICICIBANK
+"""
+
 
 class MDGenerator:
     """ A class to randomly generate MarketData for tickers"""
@@ -17,8 +27,8 @@ class MDGenerator:
     def __init__(self, tickers: List[str], prices: Dict[str, float], quantity_up_rate: int):
         self.tickers: List[str] = list(ticker.upper() for ticker in tickers)
         self.prices: Dict[str, float] = prices
-        self.price_dev_threshold = 0.005  # within 0.5%
-        self.quantity_min_max_range = (10, 25)
+        self.price_range = config.PRICE_RANGE
+        self.quantity_min_max_range = (config.MIN_QUANTITY, config.MAX_QUANTITY)
 
         # sanity check: ticker must have a configured price
         for ticker in self.tickers:
@@ -28,7 +38,7 @@ class MDGenerator:
 
         # following attributes just help the quantity and price rise over time to make updates look live
         self.quantity_up_rate = quantity_up_rate
-        self.price_up = 0.0005  # 0.05 %
+        self.price_up = config.PRICE_UP_RATE
         self.counter = 1
 
         print(f'Initialized publisher with tickers: {self.tickers}, quantity_up_rate: {self.quantity_up_rate}')
@@ -38,13 +48,16 @@ class MDGenerator:
         ticker_index = randrange(0, len(self.tickers))  # randomly choose an index
         ticker = self.tickers[ticker_index]
         configured_price = self.prices[ticker]
-        price_delta = configured_price * self.price_dev_threshold
-        price = uniform(configured_price - price_delta, configured_price + price_delta)  # select a random float
-        quantity = randrange(*self.quantity_min_max_range)  # select a random int
+        price_delta = configured_price * self.price_range
+        price: float = uniform(configured_price - price_delta, configured_price + price_delta)  # select a random float
+        quantity: int = randrange(*self.quantity_min_max_range)  # select a random int
+
+        # let's even out the quantity as highly priced stocks should be traded less in terms of quantity
+        quantity = int((quantity / configured_price) * 100)
 
         # values almost finalized, let's smoothly increase the price and quantity
         price += price * self.price_up * self.counter
-        quantity += self.quantity_up_rate * self.counter
+        quantity += int(self.quantity_up_rate * self.counter)
         self.counter += 1
 
         return MarketData(ticker=ticker, ltp=price, quantity=quantity, timestamp=datetime.now())
@@ -52,23 +65,22 @@ class MDGenerator:
 
 def main(args):
     # setting up the producer
-    producer = KafkaProducer(bootstrap_servers='localhost:9092', value_serializer=pickle.dumps)
+    producer = KafkaProducer(bootstrap_servers=f'localhost:{config.DEFAULT_KAFKA_PORT}', value_serializer=pickle.dumps)
 
     md_generator = MDGenerator(tickers=args.tickers, prices=config.TICKERS_PRICES,
                                quantity_up_rate=args.quantity_up_rate)
 
     for i in range(0, 100000):
         md = md_generator.generate_md()
-        future = producer.send('my_new_topic', value=md)
-        result = future.get(timeout=60)  # guarantees delivery
+        producer.send(config.DEFAULT_TOPIC, value=md).get(timeout=60)  # guarantees delivery
         print(f'#{i:6d}: Published MD: {md}')
-        sleep(1)  # pause for 1 seconds before publishing the next one
+        sleep(1/len(args.tickers))  # every symbol will be published roughly once every second
 
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('-t', '--tickers', nargs='+', default=config.TICKERS)
-    arg_parser.add_argument('-qr', '--quantity_up_rate', type=int, default=1)
+    arg_parser.add_argument('-qr', '--quantity_up_rate', type=int, default=config.QUANTITY_UP_RATE)
     parsed_args = arg_parser.parse_args()
 
     main(parsed_args)

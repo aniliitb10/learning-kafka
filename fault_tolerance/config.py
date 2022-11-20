@@ -1,7 +1,7 @@
 """
 Some configurations to change default ports
 1) Starting redis on different port:
-redis-server --port 6379
+redis-server --port 6389
 
 2) Changing Kafka's default port:
 Add following in config/server.properties:
@@ -22,7 +22,7 @@ bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic numbers
 
 DEFAULT_REDIS_PORT = 6389
 DEFAULT_KAFKA_PORT = 9092
-DEFAULT_TOPIC = 'numbers_11'
+DEFAULT_TOPIC = 'numbers_12'
 DEFAULT_GROUP_ID = 'numbers_group_subscribers'
 DEFAULT_NUM_RANGE = 10_000
 DEFAULT_PRODUCER_SLEEP_INTERVAL = 3  # seconds

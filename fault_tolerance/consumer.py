@@ -15,19 +15,19 @@ bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic <topic> -
 
 Script to start consumer.
 There are supposed to be three different types of consumers (consumer groups):
-1) A consumer group with 4 possible consumers
--  python -m fault_tolerance.consumer -c first -d y 
--  python -m fault_tolerance.consumer -c second
--  python -m fault_tolerance.consumer -c third
--  python -m fault_tolerance.consumer -c fourth
+1) A consumer group with 4 possible consumers, can be started using anyone of the following commands
+python -m fault_tolerance.consumer -c first -d y 
+python -m fault_tolerance.consumer -c second
+python -m fault_tolerance.consumer -c third
+python -m fault_tolerance.consumer -c fourth
 
-Warning: if starting the first consumer, don't pass -d flag, otherwise, it will clean up redis cache
+Warning: if re-starting the first consumer, don't pass -d flag, otherwise, it will clean up redis cache
 
 2) A consumer group with just one consumer and listens from latest updates (by default)
--  python -m fault_tolerance.consumer -g g1 -c when_subscribed
+python -m fault_tolerance.consumer -g g1 -c when_subscribed
 
 3) A consumer group with just one consumer and listens from the beginning
--  python -m fault_tolerance.consumer -c all -g g2 -s y
+python -m fault_tolerance.consumer -c all -g g2 -s y
 """
 
 
