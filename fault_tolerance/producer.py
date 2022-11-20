@@ -14,7 +14,8 @@ bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic <topic> -
 
 def main(args):
     # setting up kafka producer
-    kafka_producer = KafkaProducer(bootstrap_servers='localhost:9092', value_serializer=pickle.dumps)
+    kafka_producer = KafkaProducer(bootstrap_servers=f'localhost:{config.DEFAULT_KAFKA_PORT}',
+                                   value_serializer=pickle.dumps)
     for i in range(args.number_range):
         kafka_producer.send(topic=args.topic, value=i + 1).get(timeout=60)
         print(f'Published {i + 1} on kafka')

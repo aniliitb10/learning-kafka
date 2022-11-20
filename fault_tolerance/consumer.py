@@ -38,7 +38,8 @@ def main(args):
         redis_client.flushall()
         print(f'cleaned up the cache before subscribing to the Kafka consumer')
 
-    kafka_consumer = KafkaConsumer(args.topic, group_id=args.group_id, value_deserializer=pickle.loads)
+    kafka_consumer = KafkaConsumer(args.topic, bootstrap_servers=[f'localhost:{config.DEFAULT_KAFKA_PORT}'],
+                                   group_id=args.group_id, value_deserializer=pickle.loads)
     if args.seek:
         kafka_consumer.poll()
         kafka_consumer.seek_to_beginning()
